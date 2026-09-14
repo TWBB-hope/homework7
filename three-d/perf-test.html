@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>性能对比实验：antialias与物体数量对帧率的影响</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+    #panel {
+      position: absolute; top: 12px; left: 12px; z-index: 10;
+      background: rgba(10, 16, 38, 0.88); color: #cfe3ff;
+      padding: 12px 16px; border-radius: 6px; border: 1px solid #37507a;
+      font-size: 13px; line-height: 1.9; min-width: 320px;
+    }
+    #panel h3 { margin: 0 0 6px; font-size: 14px; color: #fff; }
+    button {
+      margin: 2px 4px 2px 0; padding: 4px 10px; font-size: 12px;
+      background: #1b2a4a; color: #cfe3ff; border: 1px solid #4fc3f7;
+      border-radius: 4px; cursor: pointer;
+    }
+    button.active { background: #4fc3f7; color: #08101f; }
+    .fps { font-size: 20px; color: #ffd54f; font-weight: bold; }
+    .note { color: #8fa8c8; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div id="panel">
+    <h3>性能对比实验台（独立研究任务3）</h3>
+    <div>抗锯齿antialias：
+      <button id="btnAAOn">开</button><button id="btnAAOff">关</button>
+    </div>
+    <div>物体数量：
+      <button class="btnCount" data-n="20">20</button>
+      <button class="btnCount" data-n="200">200</button>
+      <button class="btnCount" data-n="600">600</button>
+    </div>
+    <div>实时帧率：<span class="fps" id="fpsNow">--</span> FPS</div>
+    <div>近3秒平均：<span class="fps" id="fpsAvg">--</span> FPS</div>
+    <div class="note">切换设置后请等待约3秒再读取"近3秒平均"作为记录数据。</div>
+  </div>
+  <script src="libs/three.min.js"></script>
+  <script>
+    // ================= 实验场景：N个球绕中心缓转 =================
+    let antialiasOn = true;
+    let sphereCount = 20;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a1020);
+
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 14, 24);
+    camera.lookAt(0, 0, 0);
+
+    let renderer = buildRenderer();
+    function buildRenderer() {
+      const r = new THREE.WebGLRenderer({ antialias: antialiasOn });   // 实验变量1：抗锯齿
+      r.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(r.domElement);
+      return r;
+    }
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+    dir.position.set(6, 10, 6);
+    scene.add(dir);
+
+    // 实验变量2：物体数量。同一几何体+少数几种材质，排除颜色干扰
+    const group = new THREE.Group();
+    scene.add(group);
+    const sharedGeo = new THREE.SphereGeometry(0.4, 24, 24);
+    const palette = [0x4fc3f7, 0xffb74d, 0xef5350, 0x9ccc65, 0xba68c8]
+      .map(c => new THREE.MeshStandardMaterial({ color: c }));
+    const spheres = [];
+
+    function rebuildSpheres() {
+      spheres.forEach(s => group.remove(s));
+      spheres.length = 0;
+      for (let i = 0; i < sphereCount; i++) {
+        const mesh = new THREE.Mesh(sharedGeo, palette[i % palette.length]);
+        mesh.position.set(
+          (Math.random() - 0.5) * 30,
+          (Math.random() - 0.5) * 10,
+          (Math.random() - 0.5) * 30
+        );
+        mesh.userData.spin = 0.5 + Math.random();       // 每球转速随机，保证每帧都在变
+        group.add(mesh);
+        spheres.push(mesh);
+      }
+    }
+    rebuildSpheres();
+
+    // ================= 帧率统计：每秒采样，滚动保留近3次 =================
+    let frames = 0;
+    const samples = [];
+    setInterval(() => {
+      const fps = frames;
+      frames = 0;
+      samples.push(fps);
+      if (samples.length > 3) samples.shift();
+      document.getElementById('fpsNow').textContent = fps;
+      document.getElementById('fpsAvg').textContent =
+        (samples.reduce((a, b) => a + b, 0) / samples.length).toFixed(1);
+    }, 1000);
+
+    const animate = () => {
+      requestAnimationFrame(animate);
+      frames++;
+      group.rotation.y += 0.004;
+      spheres.forEach(s => { s.rotation.y += 0.02 * s.userData.spin; });
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    // ================= 控制按钮 =================
+    function refreshButtons() {
+      document.getElementById('btnAAOn').classList.toggle('active', antialiasOn);
+      document.getElementById('btnAAOff').classList.toggle('active', !antialiasOn);
+      document.querySelectorAll('.btnCount').forEach(b =>
+        b.classList.toggle('active', Number(b.dataset.n) === sphereCount));
+      samples.length = 0;                                // 换设置后清空旧样本
+    }
+
+    function switchAA(on) {
+      if (on === antialiasOn) return;
+      antialiasOn = on;
+      renderer.domElement.remove();
+      renderer.dispose();                                // 释放旧渲染器上下文
+      renderer = buildRenderer();                        // 重建（antialias创建时指定）
+      refreshButtons();
+    }
+
+    document.getElementById('btnAAOn').onclick = () => switchAA(true);
+    document.getElementById('btnAAOff').onclick = () => switchAA(false);
+    document.querySelectorAll('.btnCount').forEach(b => {
+      b.onclick = () => { sphereCount = Number(b.dataset.n); rebuildSpheres(); refreshButtons(); };
+    });
+    refreshButtons();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
