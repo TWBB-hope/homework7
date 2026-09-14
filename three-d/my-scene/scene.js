@@ -125,4 +125,68 @@ planetData.forEach((data, i) => {
   }
 });
 
-// （第三步将加入：动画循环与点击交互）
+// ================= 第三步：动画与交互 =================
+
+const clock = new THREE.Clock();
+const label = document.getElementById('label');
+
+const animate = () => {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();                     // 秒，做平滑动画用
+
+  // 公转：轨道角 = 初始角 + 时间 × 角速度（换算出稳定的匀速公转）
+  planets.forEach(p => {
+    p.orbitGroup.rotation.y = p.startAngle + t * p.data.orbitSpeed;
+    if (p.data.spinSpeed) p.planet.rotation.y = t * p.data.spinSpeed;   // 自转
+  });
+
+  // 恒星呼吸：半径与光强随sin微幅脉动
+  const pulse = 1 + 0.04 * Math.sin(t * 2);
+  sun.scale.setScalar(pulse);
+  sunGlow.scale.setScalar(pulse);
+  sunLight.intensity = 1.6 + 0.25 * Math.sin(t * 2);
+
+  stars.rotation.y += 0.0003;                           // 星幕极缓慢旋转
+
+  controls.update();                                    // 阻尼生效必须每帧update
+  renderer.render(scene, camera);
+};
+animate();
+
+// ---- Raycaster点击拾取：屏幕坐标 → NDC → 射线 → 求交 → 高亮+标签 ----
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+let selected = null;
+
+function clearSelection() {
+  if (selected) selected.planet.material.emissive.setHex(0x0a1020);
+  selected = null;
+  label.style.display = 'none';
+}
+
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  // 1) 鼠标像素坐标 → 归一化设备坐标NDC，x/y ∈ [-1,1]，y轴要取反
+  pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  // 2) 从相机发射一条穿过该点的射线，与行星数组求交
+  raycaster.setFromCamera(pointer, camera);
+  const picks = planets.filter(p => p.data.spinSpeed);  // 只拾取行星本体（卫星除外）
+  const hits = raycaster.intersectObjects(picks.map(p => p.planet), false);
+  clearSelection();
+  if (hits.length) {
+    const hit = hits[0].object;                         // 最近的命中即被点中的物体
+    selected = picks.find(p => p.planet === hit);
+    selected.planet.material.emissive.setHex(0x1b3a66); // 提高自发光=高亮
+    label.textContent = '已选中：' + hit.userData.name;
+    label.style.left = (e.clientX + 14) + 'px';
+    label.style.top = (e.clientY - 10) + 'px';
+    label.style.display = 'block';
+  }
+});
+
+// ---- 窗口适配：相机宽高比、投影矩阵、画布尺寸三者同步更新 ----
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
