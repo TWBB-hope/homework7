@@ -30,8 +30,9 @@
     </div>
     <div>物体数量：
       <button class="btnCount" data-n="20">20</button>
-      <button class="btnCount" data-n="200">200</button>
-      <button class="btnCount" data-n="600">600</button>
+      <button class="btnCount" data-n="2000">2000</button>
+      <button class="btnCount" data-n="6000">6000</button>
+      <button class="btnCount" data-n="12000">12000</button>
     </div>
     <div>实时帧率：<span class="fps" id="fpsNow">--</span> FPS</div>
     <div>近3秒平均：<span class="fps" id="fpsAvg">--</span> FPS</div>
@@ -66,7 +67,7 @@
     // 实验变量2：物体数量。同一几何体+少数几种材质，排除颜色干扰
     const group = new THREE.Group();
     scene.add(group);
-    const sharedGeo = new THREE.SphereGeometry(0.4, 24, 24);
+    const sharedGeo = new THREE.SphereGeometry(0.4, 48, 48);   // 48分段≈4600面/球，负载更接近真实模型
     const palette = [0x4fc3f7, 0xffb74d, 0xef5350, 0x9ccc65, 0xba68c8]
       .map(c => new THREE.MeshStandardMaterial({ color: c }));
     const spheres = [];
