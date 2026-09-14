@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>星球宇宙</title>
+  <style>
+    body { margin: 0; }
+    /* 点击行星后显示的名称标签 */
+    #label {
+      position: absolute; display: none; padding: 4px 10px;
+      background: rgba(10, 16, 38, 0.85); color: #cfe3ff;
+      border: 1px solid #4fc3f7; border-radius: 4px;
+      font: 14px/1.4 "PingFang SC", "Microsoft YaHei", sans-serif;
+      pointer-events: none; white-space: nowrap;
+    }
+    /* 左下角操作提示 */
+    #tips {
+      position: absolute; left: 12px; bottom: 12px; color: #8fa8c8;
+      font: 12px/1.6 "PingFang SC", "Microsoft YaHei", sans-serif;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="label"></div>
+  <div id="tips">左键拖拽旋转 · 滚轮缩放 · 右键平移 · 点击行星查看名称</div>
+  <script src="../libs/three.min.js"></script>
+  <script src="../libs/OrbitControls.js"></script>
+  <script src="scene.js"></script>
+</body>
+</html>
