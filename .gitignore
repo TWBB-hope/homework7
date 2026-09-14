@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# 教师下发的作业要求与指南原文（不纳入代码仓库）
+homework-7.docx
+student-guide-7.docx
+1788427067946-*.docx
+
+# 打包给雨课堂的源代码压缩包
+*.zip
