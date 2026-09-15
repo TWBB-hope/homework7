@@ -7,7 +7,7 @@
 | 文件 | 内容 | 对应任务 |
 | --- | --- | --- |
 | `three-d/showcase.html` + `showcase.js` | Three.js 旋转展示台：圆柱底座＋3个几何体展品＋双光源＋缓转动画＋OrbitControls | 案例复现（上午场） |
-| `three-d/campus.html` | A-Frame 校园角标：天空、草地、教学楼、飘动旗帜、脉动路灯光、两棵树（自行添加） | 案例复现（下午场） |
+| `three-d/campus.html` | A-Frame 校园角标：天空、草地、教学楼、飘动旗帜、脉动路灯光 | 案例复现（下午场） |
 | `three-d/my-scene/index.html` + `scene.js` | 自主实践「星球宇宙」：恒星（双层球壳＋呼吸动画）、3颗行星＋行星环＋卫星、轨道线、500点星幕、Raycaster点击高亮＋名称标签 | 自主实践基本要求 |
 | `three-d/perf-test.html` | 性能对比实验台：antialias开关 × 物体数量（20/200/600），内置实时与近3秒平均帧率统计 | 独立研究任务3 |
 
@@ -24,7 +24,7 @@
 
 ## 提交记录
 
-代码按"展示台 → A-Frame场景 → 星球场景（环境→主体→动画）→ 性能实验 → README"分步提交，`git log --oneline` 共9次提交（8次代码＋1次进度报告），已推送至 GitHub。
+代码按"展示台 → A-Frame场景 → 星球场景（环境→主体→动画）→ 性能实验 → README"分步提交并推送至 GitHub（`git log --oneline` 可查全部记录）。
 
 ## 提交物清单（雨课堂）
 
